@@ -1,0 +1,8 @@
+node_modules
+.manus-logs
+dist
+*.test.ts
+.git
+.gitignore
+todo.md
+README.md

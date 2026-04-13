@@ -4,6 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --font-sans: 'Noticia Text', Georgia, serif;
+  --font-heading: 'Oswald', sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -43,15 +45,16 @@
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
+  /* Epipheo Aqua as primary */
+  --primary: oklch(0.82 0.14 170);
+  --primary-foreground: oklch(0.15 0.02 170);
+  --sidebar-primary: oklch(0.82 0.14 170);
+  --sidebar-primary-foreground: oklch(0.15 0.02 170);
+  --chart-1: oklch(0.82 0.14 170);
+  --chart-2: oklch(0.65 0.18 30);
+  --chart-3: oklch(0.75 0.12 170);
+  --chart-4: oklch(0.55 0.15 30);
+  --chart-5: oklch(0.45 0.1 170);
   --radius: 0.65rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.235 0.015 65);
