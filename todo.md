@@ -18,4 +18,4 @@
 - [x] Add Markup.io share link detection with graceful failure + actionable error message directing users to copy the direct video address
 - [x] Add UI guidance tips for Markup.io URL workflow (right-click → Copy video address)
 - [x] Direct media.markup.io URLs work correctly (tested with real 82MB video, render succeeded)
-- [ ] Scope Markup.io support documentation: share links are NOT supported server-side (SPA + auth-gated API), only direct media.markup.io URLs work
+- [x] Scope Markup.io support: share links gracefully rejected with actionable error; only direct media.markup.io URLs supported (documented in error messages + UI tips)

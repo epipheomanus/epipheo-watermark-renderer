@@ -248,7 +248,7 @@ export default function Home() {
                         className="w-full rounded-lg border border-gray-300 px-4 py-3 font-sans text-sm text-gray-700 placeholder-gray-400 focus:border-[#33ebc6] focus:outline-none focus:ring-1 focus:ring-[#33ebc6]"
                       />
                       <p className="mt-2 font-sans text-xs text-gray-400">
-                        <strong>Markup.io tip:</strong> Right-click the video player &rarr; "Copy video address" to get the direct URL.
+                        <strong>Markup.io tip:</strong> Right-click directly on the video player &rarr; select "Copy video address" to get the direct media URL.
                       </p>
                     </div>
                   )}
@@ -328,7 +328,7 @@ export default function Home() {
                         className="w-full rounded-lg border border-gray-300 px-4 py-3 font-sans text-sm text-gray-700 placeholder-gray-400 focus:border-[#ff6340] focus:outline-none focus:ring-1 focus:ring-[#ff6340]"
                       />
                       <p className="mt-2 font-sans text-xs text-gray-400">
-                        <strong>Markup.io tip:</strong> Right-click the video player &rarr; "Copy video address" to get the direct URL.
+                        <strong>Markup.io tip:</strong> Right-click directly on the video player &rarr; select "Copy video address" to get the direct media URL.
                       </p>
                     </div>
                   )}

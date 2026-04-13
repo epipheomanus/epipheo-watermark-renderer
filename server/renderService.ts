@@ -135,8 +135,8 @@ async function resolveMarkupUrl(shareUrl: string): Promise<string> {
 
   throw new Error(
     "Could not extract the media URL from this Markup.io link. " +
-    "Markup.io loads content dynamically. Please right-click the video in Markup.io, " +
-    "select 'Copy video address', and paste that direct URL instead."
+    "Markup.io loads content dynamically. In Markup.io, right-click directly on the video player " +
+    "and select 'Copy video address', then paste that direct media URL here instead."
   );
 }
 
@@ -179,7 +179,7 @@ function validateMediaFile(filePath: string, expectedType: "video" | "audio"): P
       reject(new Error(
         `The downloaded ${expectedType} file is an HTML page, not a media file. ` +
         "This usually means the URL is a share/preview page rather than a direct download link. " +
-        "For Markup.io: right-click the video player and select 'Copy video address'. " +
+        "For Markup.io: right-click directly on the video player and select 'Copy video address'. " +
         "For Google Drive: make sure the file is shared publicly."
       ));
       return;
