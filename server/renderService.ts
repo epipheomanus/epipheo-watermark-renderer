@@ -101,19 +101,109 @@ export function normalizeUrl(url: string): string {
     return url.replace(/dl=0/, "dl=1").replace(/\?dl=0/, "?dl=1");
   }
 
-  // Markup.io: extract direct media URL from markup.io share links
-  // Markup.io URLs typically look like: https://app.markup.io/share/xxxxx
-  // The actual media is served from their CDN; we attempt to extract it
-  if (url.includes("markup.io")) {
-    // If it's already a direct file URL from markup CDN, use as-is
-    if (url.match(/\.(mp4|mov|avi|wav|mp3|aac)(\?|$)/i)) {
-      return url;
-    }
-    // For share links, we'll try the URL as-is and let the download handler follow redirects
+  // Markup.io: if it's already a direct media.markup.io file URL, use as-is
+  if (url.includes("media.markup.io") && url.match(/\.(mp4|mov|avi|wav|mp3|aac)(\?|$)/i)) {
     return url;
   }
 
   return url;
+}
+
+// Check if a URL is a Markup.io share link that needs resolution
+export function isMarkupShareLink(url: string): boolean {
+  return /app\.markup\.io\/(markup|share)\//.test(url);
+}
+
+// Resolve a Markup.io share link to a direct media URL by fetching the page
+async function resolveMarkupUrl(shareUrl: string): Promise<string> {
+  console.log(`[Markup.io] Resolving share link: ${shareUrl}`);
+  const html = await fetchPageHtml(shareUrl);
+  
+  // Look for media.markup.io video URLs in the HTML/JS bundle
+  const mediaMatch = html.match(/https:\/\/media\.markup\.io\/[^"'\s]+\.mp4/i);
+  if (mediaMatch) {
+    console.log(`[Markup.io] Found direct media URL: ${mediaMatch[0]}`);
+    return mediaMatch[0];
+  }
+
+  // Look for media.markup.io audio URLs
+  const audioMatch = html.match(/https:\/\/media\.markup\.io\/[^"'\s]+\.(wav|mp3|aac)/i);
+  if (audioMatch) {
+    console.log(`[Markup.io] Found direct audio URL: ${audioMatch[0]}`);
+    return audioMatch[0];
+  }
+
+  throw new Error(
+    "Could not extract the media URL from this Markup.io link. " +
+    "Markup.io loads content dynamically. Please right-click the video in Markup.io, " +
+    "select 'Copy video address', and paste that direct URL instead."
+  );
+}
+
+// Fetch page HTML (follows redirects)
+function fetchPageHtml(url: string, maxRedirects = 5): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (maxRedirects <= 0) {
+      reject(new Error("Too many redirects"));
+      return;
+    }
+    const protocol = url.startsWith("https") ? https : http;
+    const request = protocol.get(url, { headers: { "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" } }, (response) => {
+      if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        fetchPageHtml(response.headers.location, maxRedirects - 1).then(resolve).catch(reject);
+        return;
+      }
+      let data = "";
+      response.on("data", (chunk) => { data += chunk.toString(); });
+      response.on("end", () => resolve(data));
+    });
+    request.on("error", reject);
+    request.setTimeout(30000, () => {
+      request.destroy();
+      reject(new Error("Page fetch timed out"));
+    });
+  });
+}
+
+// Validate that a downloaded file is actual media (not HTML or garbage)
+function validateMediaFile(filePath: string, expectedType: "video" | "audio"): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // Quick check: read first few bytes to detect HTML
+    const fd = fs.openSync(filePath, "r");
+    const buf = Buffer.alloc(256);
+    fs.readSync(fd, buf, 0, 256, 0);
+    fs.closeSync(fd);
+    const header = buf.toString("utf8", 0, 256).trim().toLowerCase();
+
+    if (header.startsWith("<!doctype") || header.startsWith("<html") || header.startsWith("<head")) {
+      reject(new Error(
+        `The downloaded ${expectedType} file is an HTML page, not a media file. ` +
+        "This usually means the URL is a share/preview page rather than a direct download link. " +
+        "For Markup.io: right-click the video player and select 'Copy video address'. " +
+        "For Google Drive: make sure the file is shared publicly."
+      ));
+      return;
+    }
+
+    // Use ffprobe to verify it's valid media
+    const proc = spawn("ffprobe", ["-v", "error", "-show_entries", "format=format_name", "-of", "default=noprint_wrappers=1:nokey=1", filePath]);
+    let output = "";
+    let errOutput = "";
+    proc.stdout.on("data", (data) => { output += data.toString(); });
+    proc.stderr.on("data", (data) => { errOutput += data.toString(); });
+    proc.on("close", (code) => {
+      if (code !== 0) {
+        reject(new Error(
+          `The downloaded ${expectedType} file appears to be corrupted or is not a valid media file. ` +
+          `FFprobe error: ${errOutput.slice(0, 200)}. ` +
+          "Please verify the URL points to a direct downloadable file."
+        ));
+      } else {
+        resolve();
+      }
+    });
+    proc.on("error", () => resolve()); // If ffprobe isn't available, skip validation
+  });
 }
 
 // Ensure watermark is available locally
@@ -172,10 +262,17 @@ export async function startRender(
     let audioPath: string;
 
     if (videoInput.type === "url") {
+      updateJob(jobId, { progress: 5, message: "Resolving video URL..." });
+      let resolvedUrl: string;
+      if (isMarkupShareLink(videoInput.url)) {
+        updateJob(jobId, { progress: 8, message: "Resolving Markup.io share link..." });
+        resolvedUrl = await resolveMarkupUrl(videoInput.url);
+      } else {
+        resolvedUrl = normalizeUrl(videoInput.url);
+      }
       updateJob(jobId, { progress: 10, message: "Downloading video file..." });
-      const normalizedUrl = normalizeUrl(videoInput.url);
       videoPath = path.join(jobDir, "input_video.mp4");
-      await downloadFile(normalizedUrl, videoPath);
+      await downloadFile(resolvedUrl, videoPath);
     } else {
       videoPath = videoInput.path;
     }
@@ -184,12 +281,21 @@ export async function startRender(
     if (!fs.existsSync(videoPath) || fs.statSync(videoPath).size === 0) {
       throw new Error("Video file is empty or could not be downloaded");
     }
+    // Validate the file is actually a video (not an HTML page)
+    await validateMediaFile(videoPath, "video");
 
     if (audioInput.type === "url") {
+      updateJob(jobId, { progress: 15, message: "Resolving audio URL..." });
+      let resolvedUrl: string;
+      if (isMarkupShareLink(audioInput.url)) {
+        updateJob(jobId, { progress: 18, message: "Resolving Markup.io share link..." });
+        resolvedUrl = await resolveMarkupUrl(audioInput.url);
+      } else {
+        resolvedUrl = normalizeUrl(audioInput.url);
+      }
       updateJob(jobId, { progress: 20, message: "Downloading audio file..." });
-      const normalizedUrl = normalizeUrl(audioInput.url);
       audioPath = path.join(jobDir, "input_audio.wav");
-      await downloadFile(normalizedUrl, audioPath);
+      await downloadFile(resolvedUrl, audioPath);
     } else {
       audioPath = audioInput.path;
     }
@@ -198,6 +304,8 @@ export async function startRender(
     if (!fs.existsSync(audioPath) || fs.statSync(audioPath).size === 0) {
       throw new Error("Audio file is empty or could not be downloaded");
     }
+    // Validate the file is actually audio (not an HTML page)
+    await validateMediaFile(audioPath, "audio");
 
     updateJob(jobId, { progress: 25, message: "Preparing watermark overlay..." });
     const watermarkPath = await ensureWatermark();

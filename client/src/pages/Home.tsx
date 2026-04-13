@@ -239,13 +239,18 @@ export default function Home() {
                       )}
                     </div>
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Paste Google Drive, Markup.io, or direct download URL..."
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 font-sans text-sm text-gray-700 placeholder-gray-400 focus:border-[#33ebc6] focus:outline-none focus:ring-1 focus:ring-[#33ebc6]"
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Paste direct video URL (Google Drive, Dropbox, or media.markup.io)..."
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3 font-sans text-sm text-gray-700 placeholder-gray-400 focus:border-[#33ebc6] focus:outline-none focus:ring-1 focus:ring-[#33ebc6]"
+                      />
+                      <p className="mt-2 font-sans text-xs text-gray-400">
+                        <strong>Markup.io tip:</strong> Right-click the video player &rarr; "Copy video address" to get the direct URL.
+                      </p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -314,13 +319,18 @@ export default function Home() {
                       )}
                     </div>
                   ) : (
-                    <input
-                      type="text"
-                      placeholder="Paste Google Drive, Markup.io, or direct download URL..."
-                      value={audioUrl}
-                      onChange={(e) => setAudioUrl(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 font-sans text-sm text-gray-700 placeholder-gray-400 focus:border-[#ff6340] focus:outline-none focus:ring-1 focus:ring-[#ff6340]"
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Paste direct audio URL (Google Drive, Dropbox, or direct link)..."
+                        value={audioUrl}
+                        onChange={(e) => setAudioUrl(e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-3 font-sans text-sm text-gray-700 placeholder-gray-400 focus:border-[#ff6340] focus:outline-none focus:ring-1 focus:ring-[#ff6340]"
+                      />
+                      <p className="mt-2 font-sans text-xs text-gray-400">
+                        <strong>Markup.io tip:</strong> Right-click the video player &rarr; "Copy video address" to get the direct URL.
+                      </p>
+                    </div>
                   )}
                 </CardContent>
               </Card>

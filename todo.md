@@ -14,3 +14,8 @@
 - [x] Write and pass server-side tests (16 tests passing)
 - [x] Prepare Railway deployment config (Dockerfile with FFmpeg)
 - [x] Save checkpoint
+- [x] Fix "moov atom not found" error — added media file validation (HTML detection + ffprobe check) so corrupt/HTML downloads fail with clear error messages
+- [x] Add Markup.io share link detection with graceful failure + actionable error message directing users to copy the direct video address
+- [x] Add UI guidance tips for Markup.io URL workflow (right-click → Copy video address)
+- [x] Direct media.markup.io URLs work correctly (tested with real 82MB video, render succeeded)
+- [ ] Scope Markup.io support documentation: share links are NOT supported server-side (SPA + auth-gated API), only direct media.markup.io URLs work

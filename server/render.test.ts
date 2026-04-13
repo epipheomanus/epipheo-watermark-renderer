@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeUrl } from "./renderService";
+import { normalizeUrl, isMarkupShareLink } from "./renderService";
 import { EXPORT_SETTINGS, WATERMARK_CDN_URL, WATERMARK_FILENAME, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, MAX_VIDEO_SIZE, MAX_AUDIO_SIZE } from "../shared/renderTypes";
 
 describe("normalizeUrl", () => {
@@ -21,16 +21,34 @@ describe("normalizeUrl", () => {
     expect(result).toBe("https://www.dropbox.com/s/abc123/video.mp4?dl=1");
   });
 
-  it("passes through Markup.io direct file URLs unchanged", () => {
-    const url = "https://cdn.markup.io/files/abc123/video.mp4";
+  it("passes through Markup.io direct media URLs unchanged", () => {
+    const url = "https://media.markup.io/green/converted/project-images/abc/def/video.mp4";
     const result = normalizeUrl(url);
     expect(result).toBe(url);
   });
 
-  it("passes through Markup.io share links for redirect handling", () => {
-    const url = "https://app.markup.io/share/abc123";
+  it("passes through Markup.io media URLs with query params unchanged", () => {
+    const url = "https://media.markup.io/green/converted/abc/def.mp4?download-as=MyVideo.mp4";
     const result = normalizeUrl(url);
     expect(result).toBe(url);
+  });
+});
+
+describe("isMarkupShareLink", () => {
+  it("detects Markup.io markup share links", () => {
+    expect(isMarkupShareLink("https://app.markup.io/markup/c612b8b2-1c27-4dcd-b58d-02bdf8a92b6e")).toBe(true);
+  });
+
+  it("detects Markup.io /share/ links", () => {
+    expect(isMarkupShareLink("https://app.markup.io/share/abc123")).toBe(true);
+  });
+
+  it("does not flag direct media.markup.io URLs", () => {
+    expect(isMarkupShareLink("https://media.markup.io/green/converted/abc/def.mp4")).toBe(false);
+  });
+
+  it("does not flag non-Markup URLs", () => {
+    expect(isMarkupShareLink("https://drive.google.com/file/d/abc/view")).toBe(false);
   });
 
   it("passes through direct download URLs unchanged", () => {
