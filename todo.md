@@ -19,3 +19,8 @@
 - [x] Add UI guidance tips for Markup.io URL workflow (right-click → Copy video address)
 - [x] Direct media.markup.io URLs work correctly (tested with real 82MB video, render succeeded)
 - [x] Scope Markup.io support: share links gracefully rejected with actionable error; only direct media.markup.io URLs supported (documented in error messages + UI tips)
+- [x] Remove Manus OAuth gate so co-workers can use the app without Manus accounts
+- [x] Make the render page fully public (no auth redirects)
+- [x] Verify Dockerfile builds and runs correctly for Railway
+- [ ] Export code to GitHub for Railway deployment
+- [ ] Update Airtable with deployment session

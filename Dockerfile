@@ -25,7 +25,7 @@ RUN pnpm run build
 # Copy server assets (watermark) to dist directory
 RUN mkdir -p dist/assets && cp server/assets/* dist/assets/
 
-# Expose port (Railway sets PORT env var)
+# Railway sets PORT env var dynamically; expose common default
 EXPOSE 3000
 
 # Start the server
