@@ -22,5 +22,10 @@
 - [x] Remove Manus OAuth gate so co-workers can use the app without Manus accounts
 - [x] Make the render page fully public (no auth redirects)
 - [x] Verify Dockerfile builds and runs correctly for Railway
-- [ ] Export code to GitHub for Railway deployment
-- [ ] Update Airtable with deployment session
+- [x] Export code to GitHub for Railway deployment (epipheomanus/epipheo-watermark-renderer)
+- [x] Update Airtable with deployment session (Decision Log rec8nAqB3IyNLOOzQ, Current State updated)
+- [x] Strip database dependency so app runs without DATABASE_URL (render-only mode)
+- [x] Remove or bypass auth/tRPC startup that requires DB connection (conditional dynamic imports)
+- [x] Test render pipeline still works after DB removal (20 tests passing, render API responding)
+- [ ] Push updated code to GitHub
+- [ ] Update Airtable with this decision

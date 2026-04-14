@@ -2,10 +2,6 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
-import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
-import { appRouter } from "../routers";
-import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import renderRoutes from "../renderRoutes";
 
@@ -31,22 +27,41 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  // OAuth callback under /api/oauth/callback
-  registerOAuthRoutes(app);
-  // Render API routes (file upload + processing)
+
+  // Render API routes — always available, no auth required
   app.use("/api", renderRoutes);
-  // tRPC API
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({
-      router: appRouter,
-      createContext,
-    })
-  );
-  // development mode uses Vite, production mode uses static files
+
+  // Only register OAuth and tRPC if the Manus platform env vars are present
+  // (These are NOT needed for Railway standalone deployment)
+  const hasOAuthConfig = process.env.OAUTH_SERVER_URL && process.env.VITE_APP_ID;
+  if (hasOAuthConfig) {
+    try {
+      const { registerOAuthRoutes } = await import("./oauth");
+      const { appRouter } = await import("../routers");
+      const { createContext } = await import("./context");
+      const { createExpressMiddleware } = await import("@trpc/server/adapters/express");
+
+      registerOAuthRoutes(app);
+      app.use(
+        "/api/trpc",
+        createExpressMiddleware({
+          router: appRouter,
+          createContext,
+        })
+      );
+      console.log("[Server] OAuth and tRPC registered (Manus platform mode)");
+    } catch (err) {
+      console.warn("[Server] OAuth/tRPC setup skipped:", (err as Error).message);
+    }
+  } else {
+    console.log("[Server] Running in standalone mode (no OAuth, no tRPC)");
+  }
+
+  // Development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
