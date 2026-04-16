@@ -5,16 +5,16 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install exact pnpm version matching the project
+RUN corepack enable && corepack prepare pnpm@10.4.1 --activate
 
 WORKDIR /app
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install dependencies (use --no-frozen-lockfile to handle minor lockfile version diffs)
+RUN pnpm install --no-frozen-lockfile
 
 # Copy source code
 COPY . .
