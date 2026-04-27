@@ -25,6 +25,7 @@ export default function Home() {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [audioUrl, setAudioUrl] = useState("");
+  const [skipWatermark, setSkipWatermark] = useState(false);
   const [jobStatus, setJobStatus] = useState<JobStatus>("idle");
   const [job, setJob] = useState<RenderJob | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -101,6 +102,10 @@ export default function Home() {
         formData.append("audioUrl", audioUrl.trim());
       }
 
+      if (skipWatermark) {
+        formData.append("skipWatermark", "true");
+      }
+
       const res = await fetch("/api/render", {
         method: "POST",
         body: formData,
@@ -129,6 +134,7 @@ export default function Home() {
     setAudioFile(null);
     setVideoUrl("");
     setAudioUrl("");
+    setSkipWatermark(false);
     if (pollRef.current) clearInterval(pollRef.current);
   };
 
@@ -335,6 +341,20 @@ export default function Home() {
                 </CardContent>
               </Card>
 
+              {/* Skip Watermark Option */}
+              <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+                <input
+                  type="checkbox"
+                  id="skipWatermark"
+                  checked={skipWatermark}
+                  onChange={(e) => setSkipWatermark(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-[#33ebc6] accent-[#33ebc6] focus:ring-[#33ebc6]"
+                />
+                <label htmlFor="skipWatermark" className="cursor-pointer select-none font-sans text-sm text-gray-600">
+                  <span className="font-medium text-gray-700">Skip watermark</span> — render video + audio mix only (no watermark overlay)
+                </label>
+              </div>
+
               {/* Error Message */}
               {jobStatus === "error" && errorMsg && (
                 <div className="flex items-start gap-2 rounded-lg bg-red-50 p-4">
@@ -348,7 +368,7 @@ export default function Home() {
                 onClick={handleSubmit}
                 className="w-full bg-[#33ebc6] py-6 font-heading text-base font-medium uppercase tracking-wider text-gray-900 hover:bg-[#2bd4b3]"
               >
-                RENDER WATERMARK DRAFT
+                {skipWatermark ? "RENDER AUDIO MIX (NO WATERMARK)" : "RENDER WATERMARK DRAFT"}
               </Button>
 
               {/* Export Settings Info */}
@@ -394,7 +414,9 @@ export default function Home() {
                     RENDER COMPLETE
                   </h3>
                   <p className="mt-2 font-sans text-sm text-gray-600">
-                    Your watermarked draft is ready to download.
+                    {job.outputFilename?.startsWith("mix_draft")
+                      ? "Your video + audio mix is ready to download."
+                      : "Your watermarked draft is ready to download."}
                   </p>
                   <div className="mt-6 flex flex-col items-center gap-3">
                     <a

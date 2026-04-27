@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeUrl, isMarkupShareLink } from "./renderService";
+import { normalizeUrl, isMarkupShareLink, createJob, getJob } from "./renderService";
 import { EXPORT_SETTINGS, WATERMARK_CDN_URL, WATERMARK_FILENAME, VIDEO_EXTENSIONS, AUDIO_EXTENSIONS, MAX_VIDEO_SIZE, MAX_AUDIO_SIZE } from "../shared/renderTypes";
 
 describe("normalizeUrl", () => {
@@ -90,6 +90,27 @@ describe("Watermark configuration", () => {
 
   it("has correct filename", () => {
     expect(WATERMARK_FILENAME).toBe("EpipheoWatermarkLogo_Left_v2.png");
+  });
+});
+
+describe("Skip watermark feature", () => {
+  it("createJob creates a job with pending status", () => {
+    const job = createJob("test-skip-wm-1");
+    expect(job.id).toBe("test-skip-wm-1");
+    expect(job.status).toBe("pending");
+    expect(job.progress).toBe(0);
+  });
+
+  it("getJob retrieves a created job", () => {
+    createJob("test-skip-wm-2");
+    const job = getJob("test-skip-wm-2");
+    expect(job).toBeDefined();
+    expect(job?.id).toBe("test-skip-wm-2");
+  });
+
+  it("getJob returns undefined for non-existent job", () => {
+    const job = getJob("non-existent-job-id");
+    expect(job).toBeUndefined();
   });
 });
 

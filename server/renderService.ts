@@ -251,7 +251,9 @@ export async function startRender(
   jobId: string,
   videoInput: { type: "file"; path: string } | { type: "url"; url: string },
   audioInput: { type: "file"; path: string } | { type: "url"; url: string },
+  options?: { skipWatermark?: boolean },
 ): Promise<void> {
+  const skipWatermark = options?.skipWatermark ?? false;
   const jobDir = path.join(WORK_DIR, jobId);
   fs.mkdirSync(jobDir, { recursive: true });
 
@@ -307,25 +309,58 @@ export async function startRender(
     // Validate the file is actually audio (not an HTML page)
     await validateMediaFile(audioPath, "audio");
 
-    updateJob(jobId, { progress: 25, message: "Preparing watermark overlay..." });
-    const watermarkPath = await ensureWatermark();
+    let watermarkPath: string | null = null;
+    if (!skipWatermark) {
+      updateJob(jobId, { progress: 25, message: "Preparing watermark overlay..." });
+      watermarkPath = await ensureWatermark();
+    } else {
+      updateJob(jobId, { progress: 25, message: "Skipping watermark (audio mix only)..." });
+    }
 
     const duration = await getVideoDuration(videoPath);
 
-    updateJob(jobId, { status: "processing", progress: 30, message: "Rendering video with watermark and audio..." });
+    const renderLabel = skipWatermark ? "Rendering video with audio (no watermark)..." : "Rendering video with watermark and audio...";
+    updateJob(jobId, { status: "processing", progress: 30, message: renderLabel });
 
-    const outputFilename = `watermark_draft_${jobId}.mp4`;
+    const outputFilename = skipWatermark ? `mix_draft_${jobId}.mp4` : `watermark_draft_${jobId}.mp4`;
     const outputPath = path.join(jobDir, outputFilename);
 
     await new Promise<void>((resolve, reject) => {
-      const args = [
-        "-y",
-        "-i", videoPath,
-        "-i", audioPath,
-        "-loop", "1", "-i", watermarkPath,
-        "-filter_complex", "[0:v][2:v]overlay=0:0:shortest=1[outv]",
-        "-map", "[outv]",
-        "-map", "1:a",
+      let args: string[];
+
+      if (skipWatermark) {
+        // No watermark: just combine video + audio
+        args = [
+          "-y",
+          "-i", videoPath,
+          "-i", audioPath,
+          "-map", "0:v",
+          "-map", "1:a",
+          "-c:v", EXPORT_SETTINGS.videoCodec,
+          "-b:v", EXPORT_SETTINGS.videoBitrate,
+          "-r", String(EXPORT_SETTINGS.frameRate),
+          "-s", EXPORT_SETTINGS.resolution,
+          "-pix_fmt", "yuv420p",
+          "-profile:v", "high",
+          "-level", "4.1",
+          "-c:a", EXPORT_SETTINGS.audioCodec,
+          "-b:a", EXPORT_SETTINGS.audioBitrate,
+          "-ar", String(EXPORT_SETTINGS.audioSampleRate),
+          "-ac", String(EXPORT_SETTINGS.audioChannels),
+          "-shortest",
+          "-movflags", "+faststart",
+          outputPath,
+        ];
+      } else {
+        // With watermark: overlay watermark on video + combine audio
+        args = [
+          "-y",
+          "-i", videoPath,
+          "-i", audioPath,
+          "-loop", "1", "-i", watermarkPath!,
+          "-filter_complex", "[0:v][2:v]overlay=0:0:shortest=1[outv]",
+          "-map", "[outv]",
+          "-map", "1:a",
         "-c:v", EXPORT_SETTINGS.videoCodec,
         "-b:v", EXPORT_SETTINGS.videoBitrate,
         "-r", String(EXPORT_SETTINGS.frameRate),
@@ -338,9 +373,10 @@ export async function startRender(
         "-ar", String(EXPORT_SETTINGS.audioSampleRate),
         "-ac", String(EXPORT_SETTINGS.audioChannels),
         "-shortest",
-        "-movflags", "+faststart",
-        outputPath,
-      ];
+          "-movflags", "+faststart",
+          outputPath,
+        ];
+      }
 
       const ffmpeg = spawn("ffmpeg", args);
       let stderrData = "";
@@ -378,10 +414,13 @@ export async function startRender(
       throw new Error("Output file was not created or is empty");
     }
 
+    const completeMsg = skipWatermark
+      ? "Render complete! Your video + audio mix is ready to download."
+      : "Render complete! Your watermarked draft is ready to download.";
     updateJob(jobId, {
       status: "complete",
       progress: 100,
-      message: "Render complete! Your watermarked draft is ready to download.",
+      message: completeMsg,
       outputFilename,
     });
   } catch (error: any) {

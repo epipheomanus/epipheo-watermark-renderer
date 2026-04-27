@@ -81,7 +81,7 @@ router.post(
   async (req, res) => {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-      const { videoUrl, audioUrl } = req.body;
+      const { videoUrl, audioUrl, skipWatermark } = req.body;
 
       let videoInput: { type: "file"; path: string } | { type: "url"; url: string };
       if (files?.video?.[0]) {
@@ -112,7 +112,8 @@ router.post(
       const job = createJob(jobId);
 
       // Fire and forget - render runs in background
-      startRender(jobId, videoInput, audioInput).catch((err) => {
+      const renderOptions = { skipWatermark: skipWatermark === "true" || skipWatermark === "1" };
+      startRender(jobId, videoInput, audioInput, renderOptions).catch((err) => {
         console.error(`[Render] Job ${jobId} failed:`, err);
       });
 

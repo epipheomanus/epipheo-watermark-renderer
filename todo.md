@@ -29,3 +29,7 @@
 - [x] Test render pipeline still works after DB removal (20 tests passing, render API responding)
 - [ ] Push updated code to GitHub
 - [ ] Update Airtable with this decision
+- [x] Add 'Skip Watermark' checkbox/toggle to render UI (unchecked by default)
+- [x] Update backend render endpoint to accept skipWatermark parameter
+- [x] Modify FFmpeg command to skip watermark overlay when skipWatermark is true
+- [ ] Push no-watermark feature to GitHub (pending)
