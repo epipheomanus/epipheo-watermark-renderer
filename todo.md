@@ -27,9 +27,11 @@
 - [x] Strip database dependency so app runs without DATABASE_URL (render-only mode)
 - [x] Remove or bypass auth/tRPC startup that requires DB connection (conditional dynamic imports)
 - [x] Test render pipeline still works after DB removal (20 tests passing, render API responding)
-- [ ] Push updated code to GitHub
-- [ ] Update Airtable with this decision
+- [x] Push updated code to GitHub
+- [x] Update Airtable with this decision
 - [x] Add 'Skip Watermark' checkbox/toggle to render UI (unchecked by default)
 - [x] Update backend render endpoint to accept skipWatermark parameter
 - [x] Modify FFmpeg command to skip watermark overlay when skipWatermark is true
-- [ ] Push no-watermark feature to GitHub (pending)
+- [x] Push no-watermark feature to GitHub
+- [x] Fix React console error: uncontrolled input becoming controlled (added key props to mode-switching divs)
+- [x] Add "Uploading files..." state with indeterminate spinner during file upload before render progress kicks in

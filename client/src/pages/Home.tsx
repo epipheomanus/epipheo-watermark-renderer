@@ -217,6 +217,7 @@ export default function Home() {
 
                   {videoMode === "upload" ? (
                     <div
+                      key="video-upload"
                       onClick={() => videoInputRef.current?.click()}
                       className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-[#33ebc6] hover:bg-gray-50"
                     >
@@ -245,7 +246,7 @@ export default function Home() {
                       )}
                     </div>
                   ) : (
-                    <div>
+                    <div key="video-url">
                       <input
                         type="text"
                         placeholder="Paste direct video URL (Google Drive, Dropbox, or media.markup.io)..."
@@ -297,6 +298,7 @@ export default function Home() {
 
                   {audioMode === "upload" ? (
                     <div
+                      key="audio-upload"
                       onClick={() => audioInputRef.current?.click()}
                       className="cursor-pointer rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-[#ff6340] hover:bg-gray-50"
                     >
@@ -325,7 +327,7 @@ export default function Home() {
                       )}
                     </div>
                   ) : (
-                    <div>
+                    <div key="audio-url">
                       <input
                         type="text"
                         placeholder="Paste direct audio URL (Google Drive, Dropbox, or direct link)..."
@@ -378,8 +380,33 @@ export default function Home() {
             </div>
           )}
 
-          {/* Progress / Status Display */}
-          {isWorking && (
+          {/* Uploading State - indeterminate spinner while files are being sent to server */}
+          {jobStatus === "uploading" && (
+            <Card className="border-gray-200">
+              <CardContent className="py-10">
+                <div className="text-center">
+                  <Loader2 className="mx-auto h-10 w-10 animate-spin text-[#33ebc6]" />
+                  <h3 className="mt-4 font-heading text-lg font-medium uppercase tracking-wider text-gray-800">
+                    UPLOADING FILES
+                  </h3>
+                  <p className="mt-2 font-sans text-sm text-gray-500">
+                    Sending your files to the server. This may take a minute for large files...
+                  </p>
+                  <div className="mx-auto mt-6 max-w-md">
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200">
+                      <div className="h-full w-1/3 animate-[indeterminate_1.5s_ease-in-out_infinite] rounded-full bg-[#33ebc6]" />
+                    </div>
+                    <p className="mt-2 font-heading text-sm font-medium text-gray-400">
+                      Please wait...
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Progress / Status Display - downloading URLs or rendering */}
+          {(jobStatus === "downloading" || jobStatus === "processing") && (
             <Card className="border-gray-200">
               <CardContent className="py-10">
                 <div className="text-center">

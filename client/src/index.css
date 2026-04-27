@@ -136,6 +136,15 @@
   }
 }
 
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}
+
 @layer components {
   /**
    * Custom container utility that centers content and adds responsive padding.
